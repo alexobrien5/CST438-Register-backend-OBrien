@@ -63,7 +63,42 @@ public class ScheduleController {
 		}
 	}
 	
-
+	// As an administrator, I can add a student to the system
+	@PostMapping("/addStudent")
+	@Transactional
+	public Student addStudent( @RequestBody Student newStudent) {
+		
+		// creating student object, attaching email if exists
+		Student student = studentRepository.findByEmail(newStudent.getEmail());
+		
+		// if student does not exist and name of new student is not empty, save new student
+		if (student == null && !newStudent.getName().isEmpty()) {
+			return studentRepository.save(newStudent);
+		} else {
+			throw new ResponseStatusException( HttpStatus.BAD_REQUEST, "Student already exists in system or name is invalid.");
+		}
+	}
+	
+	// As an administrator, I can put a student registration on HOLD
+	// As an administrator, I can release the HOLD on student registration
+	@PostMapping("/changeStatus")
+	@Transactional
+	public Student changeStatus( @RequestBody Student newStudent) {
+		
+		Student student = studentRepository.findByEmail(newStudent.getEmail());
+		
+		// student.status
+		// = 0  ok to register
+		// != 0 hold on registration.  student.status may have reason for hold.
+		
+		if (student != null) {
+			student.setStatusCode(newStudent.getStatusCode());
+			student.setStatus(newStudent.getStatus());
+			return studentRepository.save(student);
+		} else {
+			throw new ResponseStatusException( HttpStatus.BAD_REQUEST, "Student does not exist in system.");
+		}
+	}
 	
 	@PostMapping("/schedule")
 	@Transactional
@@ -96,6 +131,8 @@ public class ScheduleController {
 		}
 		
 	}
+
+	
 	
 	@DeleteMapping("/schedule/{enrollment_id}")
 	@Transactional
